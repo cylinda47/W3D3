@@ -1,0 +1,46 @@
+#!/usr/bin/env ruby
+
+require 'launchy'
+
+def create_shortened_url(user_email)
+  puts "What is your to-be-coneverted url?"
+  long_url = gets.chomp
+  user = User.where(email: user_email)
+  new_url = ShortenedUrl.create_short_url_for_user!(user.first, long_url)
+  puts "Your short url is #{new_url.short_url}"
+end
+
+def visit_shortened_url(user_email)
+  puts "What is the shortened url you want to visit?"
+  url = gets.chomp
+  user = User.where(email: user_email)
+  short_url = ShortenedUrl.find_by(short_url: url)
+  record_visit = Visit.record_visit!(user.first, short_url)
+  Launchy.open(short_url.long_url)
+end
+
+begin
+  puts "What is your email?"
+  user_email = gets.chomp
+  raise ArgumentError, "Your email is not found. Please try again." unless User.exists?(email: user_email)
+rescue
+  retry
+end
+
+begin
+  puts "What do you want to do?"
+  puts "0. Create shortened URL"
+  puts "1. Visit shortened URL"
+  response = Integer(gets.chomp)
+  raise "Invalid choice. Please try again." unless response.between?(0,1)
+rescue
+  retry
+end
+
+case response
+when 0
+  create_shortened_url(user_email)
+when 1
+  visit_shortened_url(user_email)
+else
+end
